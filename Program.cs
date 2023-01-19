@@ -1,73 +1,58 @@
 ﻿using System.Net;
 using System.Net.Sockets;
-using System.Text;
 
-namespace SocketServer
+namespace SocketClient
 {
     internal class Program
     {
         static void Main(string[] args)
         {
-            // Displaying IP address to the console
-            Console.WriteLine("IP Address of the computer is : " + LocalIPAddress());
+            //Get the server IP address and the port number
+            String serverIP = "";
+            String serverPort = "";
 
-            //Coding for Server
+            Console.WriteLine("Enter the IP Address of the Server : ");
+            serverIP = Console.ReadLine();
 
-            // 1. Create Socket
+            Console.WriteLine("Enter the Port Number of the Server : ");
+            serverPort = Console.ReadLine();
 
-            Socket m_listenSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            // 1. Create the socket 
 
-            // 2. Bind to a port
+            Socket m_sendSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-            int iPort = 8080;
-            IPEndPoint m_LocalIPEP = new IPEndPoint(IPAddress.Any, iPort);
-            m_listenSocket.Bind(m_LocalIPEP);
+            // 2. Connect to the server
 
-            Console.WriteLine("Server IP Address : " +LocalIPAddress());
+            IPAddress destIP = IPAddress.Parse(serverIP);
+            int destPort = System.Convert.ToInt16(serverPort);
 
-            Console.WriteLine("Listening on port "+ iPort);
+            IPEndPoint destEP = new IPEndPoint(destIP, destPort);
 
-            // 3. Put it in listen Mode
+            // User Message
 
-            m_listenSocket.Listen(4);
+            Console.WriteLine("Waiting to Connect..");
+            m_sendSocket.Bind(destEP);
+            Console.WriteLine("Connected.");
 
-            // 4. Accept the connection
+            // 3. Send Data
 
-            Socket m_acceptSocket = m_listenSocket.Accept();
+            string msg;
+            Console.WriteLine("Enter message to send : ");
+            msg = Console.ReadLine();
 
-            // 5. Receive data
+            Byte[] s_data = System.Text.Encoding.ASCII.GetBytes(msg);
 
-            Byte[] ReceiveBuffer = new Byte[1024];
-            int count;
+            // User Message
+            Console.WriteLine("Sending Data..");
+            m_sendSocket.Send(s_data, SocketFlags.None);
 
-            count =  m_acceptSocket.Receive(ReceiveBuffer,SocketFlags.None);
-            if (count > 0) { 
-                String msg = Encoding.ASCII.GetString(ReceiveBuffer,0,count);
-                Console.WriteLine(msg);
-            }
+            // User Message
+            Console.WriteLine("Sending Completed..");
 
-            // 6. Shutdown & Close the socket
+            // 4. Shutdown & Close Socket
+            m_sendSocket.Shutdown(SocketShutdown.Both);
+            m_sendSocket.Close();
 
-            m_acceptSocket.Shutdown(SocketShutdown.Both);
-
-            m_acceptSocket.Close();
-
-        }
-
-        //Method to obtain the IP address & display
-
-        public static String LocalIPAddress() {
-            IPHostEntry host;
-            String localIP = "";
-
-            host = Dns.GetHostEntry(Dns.GetHostName());
-            foreach(IPAddress ip in host.AddressList){
-                if (ip.AddressFamily == AddressFamily.InterNetwork ) {
-                    localIP = ip.ToString();
-                    break;
-                }
-            }
-            return localIP;
         }
     }
 }
